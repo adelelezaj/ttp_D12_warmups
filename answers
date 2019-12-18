@@ -1,0 +1,24 @@
+-- Find the mean, min, max, stdev for the interval of time (in days) between purchases for each customer, 
+-- as a way of measuring purchasing-frequency for each customer. Also calculate the number of orders for each 
+-- customer.
+-- (See the *hints* and expected results files for ideas)
+
+with customer_orders AS (
+    SELECT * FROM customers AS c
+    JOIN orders AS o USING (customer_id)
+),
+cust_order_date as (
+SELECT customer_id, contact_name,order_id,order_date, 
+LAG(order_date,1) OVER (PARTITION BY customer_id order by order_date) AS prev_date
+FROM customer_orders
+GROUP BY 1,2,3,4
+)
+SELECT customer_id, contact_name,
+MIN(order_date - prev_date),
+ROUND(AVG(order_date-prev_date),2) as average,
+MAX(order_date-prev_date),
+ROUND(stddev(order_date-prev_date),2),
+COUNT(order_id) as num_of_orders
+FROM cust_order_date
+GROUP BY 1,2
+order by min;
